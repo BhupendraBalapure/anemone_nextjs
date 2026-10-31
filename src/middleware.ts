@@ -20,7 +20,12 @@ export default async function middleware(req: NextRequest) {
   // 1. Clean host (remove port and leading www)
   const cleanHost = hostname.replace(/:[0-9]+$/, '').toLowerCase().replace(/^www\./, '');
 
-  const centralDomains = ['localhost', '127.0.0.1', 'anemony.in'];
+  const rootDomain = (process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'anemony.in')
+    .replace(/:[0-9]+$/, '')
+    .toLowerCase()
+    .replace(/^www\./, '');
+
+  const centralDomains = ['localhost', '127.0.0.1', 'anemony.in', rootDomain];
   const isVercel = cleanHost.endsWith('.vercel.app') || cleanHost.endsWith('.now.sh');
   const isCentral = centralDomains.includes(cleanHost) || isVercel;
 
@@ -30,16 +35,22 @@ export default async function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  // 3. Subdomain check (e.g., store1.anemony.in or store1.localhost)
-  const isSubdomainOfCentral =
-    cleanHost.endsWith('.anemony.in') || cleanHost.endsWith('.localhost');
+  // 3. Subdomain check (e.g., store1.anemony.in, store1.localhost, or store1.<custom-root>)
+  const isSubdomain =
+    cleanHost.endsWith('.anemony.in') ||
+    cleanHost.endsWith('.localhost') ||
+    (rootDomain !== 'localhost' && cleanHost.endsWith(`.${rootDomain}`));
 
-  if (isSubdomainOfCentral) {
-    const subdomain = cleanHost.split('.')[0];
-    // Rewrite internally to /store/[slug]
-    return NextResponse.rewrite(
-      new URL(`/store/${subdomain}${url.pathname === '/' ? '' : url.pathname}`, req.url)
-    );
+  if (isSubdomain) {
+    // Extract the subdomain part (e.g. bhupendra-2011 from bhupendra-2011.localhost)
+    const parts = cleanHost.split('.');
+    const subdomain = parts[0];
+
+    // Don't rewrite platform subdomains like app or admin
+    if (subdomain !== 'app' && subdomain !== 'admin') {
+      const targetPath = `/store/${subdomain}${url.pathname === '/' ? '' : url.pathname}${url.search}`;
+      return NextResponse.rewrite(new URL(targetPath, req.url));
+    }
   }
 
   // 4. Fallback: pass through to standard routes
