@@ -21,7 +21,8 @@ export default async function middleware(req: NextRequest) {
   const cleanHost = hostname.replace(/:[0-9]+$/, '').toLowerCase().replace(/^www\./, '');
 
   const centralDomains = ['localhost', '127.0.0.1', 'anemony.in'];
-  const isCentral = centralDomains.includes(cleanHost);
+  const isVercel = cleanHost.endsWith('.vercel.app') || cleanHost.endsWith('.now.sh');
+  const isCentral = centralDomains.includes(cleanHost) || isVercel;
 
   // 2. If accessing central platform directly
   if (isCentral) {
@@ -41,9 +42,6 @@ export default async function middleware(req: NextRequest) {
     );
   }
 
-  // 4. Custom domain mapping (e.g., shop.brand.com)
-  // For custom domains, we rewrite to /store/domain/[customDomain]
-  return NextResponse.rewrite(
-    new URL(`/store/domain/${cleanHost}${url.pathname === '/' ? '' : url.pathname}`, req.url)
-  );
+  // 4. Fallback: pass through to standard routes
+  return NextResponse.next();
 }
