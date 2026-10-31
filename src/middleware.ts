@@ -26,8 +26,14 @@ export default async function middleware(req: NextRequest) {
     .replace(/^www\./, '');
 
   const centralDomains = ['localhost', '127.0.0.1', 'anemony.in', rootDomain];
-  const isVercel = cleanHost.endsWith('.vercel.app') || cleanHost.endsWith('.now.sh');
-  const isCentral = centralDomains.includes(cleanHost) || isVercel;
+  
+  // The main platform Vercel app domain or preview deployments of anemone-nextjs
+  const isMainVercel =
+    cleanHost === 'anemone-nextjs.vercel.app' ||
+    (cleanHost.endsWith('.vercel.app') && cleanHost.startsWith('anemone-nextjs')) ||
+    cleanHost.endsWith('.now.sh');
+
+  const isCentral = centralDomains.includes(cleanHost) || isMainVercel;
 
   // 2. If accessing central platform directly
   if (isCentral) {
@@ -35,19 +41,24 @@ export default async function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  // 3. Subdomain check (e.g., store1.anemony.in, store1.localhost, or store1.<custom-root>)
+  // 3. Subdomain check (e.g. store1.localhost, store1.anemony.in, or any custom Vercel domain like bhupendra-2011.vercel.app)
+  const isVercelStoreDomain = cleanHost.endsWith('.vercel.app') && !isMainVercel;
   const isSubdomain =
     cleanHost.endsWith('.anemony.in') ||
     cleanHost.endsWith('.localhost') ||
-    (rootDomain !== 'localhost' && cleanHost.endsWith(`.${rootDomain}`));
+    (rootDomain !== 'localhost' && cleanHost.endsWith(`.${rootDomain}`)) ||
+    isVercelStoreDomain;
 
   if (isSubdomain) {
-    // Extract the subdomain part (e.g. bhupendra-2011 from bhupendra-2011.localhost)
-    const parts = cleanHost.split('.');
-    const subdomain = parts[0];
+    let subdomain = '';
+    if (isVercelStoreDomain) {
+      subdomain = cleanHost.replace('.vercel.app', '');
+    } else {
+      subdomain = cleanHost.split('.')[0];
+    }
 
     // Don't rewrite platform subdomains like app or admin
-    if (subdomain !== 'app' && subdomain !== 'admin') {
+    if (subdomain && subdomain !== 'app' && subdomain !== 'admin') {
       const targetPath = `/store/${subdomain}${url.pathname === '/' ? '' : url.pathname}${url.search}`;
       return NextResponse.rewrite(new URL(targetPath, req.url));
     }
