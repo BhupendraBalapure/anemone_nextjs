@@ -1,36 +1,77 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🌸 Anemony MSME Digital Operating System (Next.js 15 + Supabase)
 
-## Getting Started
+An enterprise-grade, multi-tenant digital operating system and no-code store builder engineered for Micro, Small, and Medium Enterprises (MSMEs).
 
-First, run the development server:
+---
 
+## ⚡ Tech Stack
+
+- **Framework**: Next.js 15+ (App Router, React 19, Server & Client Components)
+- **Database & Auth**: Supabase (PostgreSQL with Row Level Security - RLS)
+- **Domain Routing**: Next.js Edge Middleware (Subdomains & Custom Domain resolution)
+- **Styling**: Tailwind CSS 4 + Lucide React Icons
+- **Animation & FX**: Canvas Confetti (celebratory launch)
+- **Conversational Commerce**: WhatsApp Click-to-Chat payload serialization (`https://wa.me/...`)
+
+---
+
+## 🚀 Quick Start (Development)
+
+### 1. Install Dependencies
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. Configure Supabase (Optional for Local Demo)
+Copy `.env.example` to `.env.local`:
+```bash
+cp .env.example .env.local
+```
+Then execute [`supabase/schema.sql`](supabase/schema.sql) in your **Supabase Dashboard -> SQL Editor** to create the tables (`tenants`, `catalog_items`, `orders`) and Row Level Security policies.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+*(Note: The app runs in interactive demo mode even without active Supabase keys!)*
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 3. Run Development Server
+```bash
+npm run dev
+```
 
-## Learn More
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🧭 Key Routes & Features
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+| Route | Feature Description |
+| :--- | :--- |
+| [`/`](http://localhost:3000) | **Marketing Hub**: Overview, feature pillars, and instant launch button |
+| [`/onboarding`](http://localhost:3000/onboarding) | **60-Second Onboarding Wizard**: Industry recommendation, auto-slug generator, template picker, and automatic 4-item catalog seeder |
+| [`/store/artisan-decor`](http://localhost:3000/store/artisan-decor) | **Retail Storefront**: Category filter, search, cart drawer, `FESTIVE20` coupon engine, and WhatsApp checkout |
+| [`/store/city-care`](http://localhost:3000/store/city-care) | **Clinic & Services Storefront**: Appointment booking scheduler and doctor consultation fee menu |
+| [`/store/{slug}/dashboard`](http://localhost:3000/store/artisan-decor/dashboard) | **Merchant Dashboard**: Order management, status toggling, catalog review, and DNS verification |
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 🛠️ Project Structure
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```text
+src/
+├── app/
+│   ├── page.tsx                     # Platform Landing Page
+│   ├── onboarding/page.tsx          # 60-Sec Store Creation Wizard
+│   └── store/[slug]/
+│       ├── page.tsx                 # Dynamic Storefront (RSC)
+│       ├── StorefrontClient.tsx     # Cart, Search, Coupons & WhatsApp Checkout
+│       └── dashboard/
+│           ├── page.tsx             # Merchant Admin Hub
+│           └── MerchantDashboardClient.tsx # Orders & Domain DNS
+├── lib/
+│   ├── supabase/
+│   │   ├── types.ts                 # Tenant, Catalog, and Order models
+│   │   ├── client.ts                # Browser Supabase client
+│   │   └── server.ts                # Server Supabase client (SSR)
+│   ├── template-catalog.ts          # 11 Categories & Archetype Themes
+│   ├── store-service.ts             # Data layer (Supabase + Local fallback)
+│   └── whatsapp.ts                  # Algorithm 4: WhatsApp Invoice Serializer
+└── middleware.ts                    # Algorithm 1: Dynamic Domain & Subdomain Router
+```
